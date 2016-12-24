@@ -30,7 +30,7 @@ ROOT_UID = 0
 TEMP_DIRECTORY = gettempdir() + "/collectd-cloudwatch-plugin/"
 TIMESTAMP_FORMAT = "%Y-%m-%d_%H_%M"
 TAR_FILE = "awslabs-collectd-cloudwatch.tar.gz"
-DOWNLOAD_PLUGIN_DIR = "awslabs-collectd-cloudwatch*"
+DOWNLOAD_PLUGIN_DIR = "berenddeboer-collectd-cloudwatch*"
 DEFAULT_PLUGIN_CONFIGURATION_DIR = "/opt/collectd-plugins/cloudwatch/config"
 NEW_PLUGIN_FILES = DOWNLOAD_PLUGIN_DIR + "/src/*"
 RECOMMENDED_COLLECTD_CONFIGURATION = DOWNLOAD_PLUGIN_DIR + "/resources/collectd.conf"
@@ -482,7 +482,7 @@ def main():
     COLLECTD_INFO = get_collectd_info()
     STOP_COLLECTD_CMD = CMD("pkill collectd", "Stopping collectd process")
     START_COLLECTD_CMD = CMD(COLLECTD_INFO.exec_path, "Starting collectd process")
-    DOWNLOAD_PLUGIN_CMD = CMD("curl -sL https://github.com/berenddeboer/collectd-cloudwatch/tarball/master > " + TAR_FILE, "Downloading plugin")
+    DOWNLOAD_PLUGIN_CMD = CMD("curl -sL https://github.com/berenddeboer/collectd-cloudwatch/tarball/provide-hostname > " + TAR_FILE, "Downloading plugin")
     UNTAR_PLUGIN_CMD = CMD("tar zxf " + TAR_FILE, "Extracting plugin")
     COPY_CMD = "\cp -rf {source} {target}"
     COPY_PLUGIN_CMD = CMD(COPY_CMD.format(source=NEW_PLUGIN_FILES, target=CollectdInfo.PLUGINS_DIR), "Moving to collectd plugins directory")
