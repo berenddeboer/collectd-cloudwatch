@@ -5,7 +5,7 @@ import plugininfo
 class MetricDataStatistic(object):
     """
     The MetricDataStatistic object encapsulates the information sent with putMetricData.
-    
+
     Keyword arguments:
     namespace -- the default name space for CloudWatch metric (default defined by NAMESPACE)
     metric_name -- the metric identifier (default '')
@@ -14,7 +14,7 @@ class MetricDataStatistic(object):
     statistics -- the MetricDataStatistic.Statistics object used to aggregate raw values (default None)
     """
     NAMESPACE = plugininfo.NAMESPACE
-    
+
     def __init__(self, metric_name='', unit="", dimensions={}, statistic_values=None,
                  timestamp=None, namespace=NAMESPACE):
         """ Constructor """
@@ -26,18 +26,18 @@ class MetricDataStatistic(object):
         if timestamp:
             self.timestamp = timestamp
         else:
-            self.timestamp = awsutils.get_aws_timestamp() 
-        
+            self.timestamp = awsutils.get_aws_timestamp()
+
     def add_value(self, value):
         if not self.statistics:
-            self.statistics = self.Statistics(value) 
+            self.statistics = self.Statistics(value)
         else:
             self.statistics._add_value(value)
-        
+
     class Statistics:
         """
         The Statistics object encapsulates the aggregated metric values used by MetricDataStatistic.
-        
+
         Keyword arguments:
         min -- the minimum aggregated value (default None)
         max -- the maximum aggregated value (default None)
@@ -45,18 +45,18 @@ class MetricDataStatistic(object):
         avg -- the average of all aggregated values (default None)
         sample_count -- the count of aggregated values (default 0)
         """
-        
+
         def __init__(self, value):
             """ Constructor """
             self.min = value
             self.max = value
             self.sum = value
             self.sample_count = 1
-        
+
         def _add_value(self, value):
-            """ 
+            """
             Add new value and recalculate the statistics
-            
+
             Keyword arguments:
             value -- new value to be included in the statistics
             """
@@ -72,21 +72,21 @@ class MetricDataBuilder(object):
     """
     The metric data builder is responsible for translating Collectd value list objects
     to CloudWatch MetricData.
-    
+
     Keyword arguments:
     config_helper -- The ConfigHelper object with configuration loaded
     vl -- The Collectd ValueList object with metric information
     """
-    
+
     def __init__(self, config_helper, vl):
         self.config = config_helper
         self.vl = vl
-        
+
     def build(self):
         """ Builds metric data object with name and dimensions but without value or statistics """
         return MetricDataStatistic(metric_name=self._build_metric_name(), dimensions=self._build_metric_dimensions())
-        
-    def _build_metric_name(self): 
+
+    def _build_metric_name(self):
         """
         Creates single string metric name from the Collectd ValueList naming format by flattening the
         multilevel structure into the string in the following format: "plugin.type.type_instance".
@@ -97,10 +97,11 @@ class MetricDataBuilder(object):
         if self.vl.type_instance:
             name_builder.append(str(self.vl.type_instance))
         return ".".join(name_builder)
-    
+
     def _build_metric_dimensions(self):
         dimensions = {
-              "Host" : self._get_host_dimension(),
+              "Instance Name" : self._get_hostname,
+              "InstanceId" : self._get_host_dimension(),
               "PluginInstance" : self._get_plugin_instance_dimension()
               }
         return dimensions
@@ -114,3 +115,8 @@ class MetricDataBuilder(object):
         if self.config.host:
             return self.config.host
         return self.vl.host
+
+    def _get_hostname(self):
+        if self.config.hostname:
+            return self.config.hostname
+        return ""
