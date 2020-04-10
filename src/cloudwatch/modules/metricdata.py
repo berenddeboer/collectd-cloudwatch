@@ -1,6 +1,6 @@
 import awsutils as awsutils
 import plugininfo
-
+import datetime
 
 class MetricDataStatistic(object):
     """
@@ -76,17 +76,27 @@ class MetricDataBuilder(object):
     Keyword arguments:
     config_helper -- The ConfigHelper object with configuration loaded
     vl -- The Collectd ValueList object with metric information
+    adjusted_time - The adjusted_time is the time adjusted according to storage resolution
     """
-
-    def __init__(self, config_helper, vl):
+    
+    def __init__(self, config_helper, vl, adjusted_time=None):
         self.config = config_helper
         self.vl = vl
+        self.adjusted_time = adjusted_time
 
     def build(self):
         """ Builds metric data object with name and dimensions but without value or statistics """
-        return MetricDataStatistic(metric_name=self._build_metric_name(), dimensions=self._build_metric_dimensions())
+        metric_array = [MetricDataStatistic(metric_name=self._build_metric_name(), dimensions=self._build_metric_dimensions(), timestamp=self._build_timestamp())]
+        if self.config.push_asg:
+            metric_array.append(MetricDataStatistic(metric_name=self._build_metric_name(), dimensions=self._build_asg_dimension(), timestamp=self._build_timestamp()))
+        if self.config.push_constant:
+            metric_array.append(MetricDataStatistic(metric_name=self._build_metric_name(), dimensions=self._build_constant_dimension(), timestamp=self._build_timestamp()))
+        return metric_array
+        
+    def _build_timestamp(self):
+        return datetime.datetime.utcfromtimestamp(self.adjusted_time).strftime('%Y%m%dT%H%M%SZ') if self.config.enable_high_resolution_metrics else None
 
-    def _build_metric_name(self):
+    def _build_metric_name(self): 
         """
         Creates single string metric name from the Collectd ValueList naming format by flattening the
         multilevel structure into the string in the following format: "plugin.type.type_instance".
@@ -97,6 +107,20 @@ class MetricDataBuilder(object):
         if self.vl.type_instance:
             name_builder.append(str(self.vl.type_instance))
         return ".".join(name_builder)
+    
+    def _build_asg_dimension(self):
+        dimensions = {
+              "AutoScalingGroup" : self._get_autoscaling_group(),
+              "PluginInstance" : self._get_plugin_instance_dimension()
+              }
+        return dimensions
+
+    def _build_constant_dimension(self):
+        dimensions = {
+              "FixedDimension" : self.config.constant_dimension_value,
+              "PluginInstance" : self._get_plugin_instance_dimension()
+              }
+        return dimensions
 
     def _build_metric_dimensions(self):
         dimensions = {
@@ -104,6 +128,10 @@ class MetricDataBuilder(object):
               "InstanceId" : self._get_host_dimension(),
               "PluginInstance" : self._get_plugin_instance_dimension()
               }
+        if self.config.push_asg:
+            dimensions["AutoScalingGroup"] = self._get_autoscaling_group()
+        if self.config.push_constant:
+            dimensions["FixedDimension"] = self.config.constant_dimension_value
         return dimensions
 
     def _get_plugin_instance_dimension(self):
@@ -120,3 +148,8 @@ class MetricDataBuilder(object):
         if self.config.hostname:
             return self.config.hostname
         return ""
+
+    def _get_autoscaling_group(self):
+        if self.config.asg_name:
+            return self.config.asg_name
+        return "NONE"
