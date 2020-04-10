@@ -124,7 +124,7 @@ class MetricDataBuilder(object):
 
     def _build_metric_dimensions(self):
         dimensions = {
-              "Instance Name" : self._get_hostname,
+              "Instance Name" : self._get_hostname(),
               "InstanceId" : self._get_host_dimension(),
               "PluginInstance" : self._get_plugin_instance_dimension()
               }
