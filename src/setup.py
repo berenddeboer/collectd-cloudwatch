@@ -739,8 +739,8 @@ $flush_interval_in_seconds$
 def main():
     CMD = namedtuple("cmd", "cmd, msg")
     COLLECTD_INFO = get_collectd_info()
-    STOP_COLLECTD_CMD = CMD("pkill collectd", "Stopping collectd process")
-    START_COLLECTD_CMD = CMD(COLLECTD_INFO.exec_path, "Starting collectd process")
+    STOP_COLLECTD_CMD = CMD("systemctl stop collectd", "Stopping collectd process")
+    START_COLLECTD_CMD = CMD("systemctl start collectd", "Starting collectd process")
     DOWNLOAD_PLUGIN_CMD = CMD("curl -sL https://github.com/" + GITHUB_USER_NAME + "/collectd-cloudwatch/tarball/" + GITHUB_REPO_BRANCH + " > " + TAR_FILE, "Downloading plugin")
     UNTAR_PLUGIN_CMD = CMD("tar zxf " + TAR_FILE, "Extracting plugin")
     COPY_CMD = "\cp -rf {source} {target}"
