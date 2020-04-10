@@ -124,7 +124,7 @@ class MetricDataBuilder(object):
 
     def _build_metric_dimensions(self):
         dimensions = {
-              "Instance Name" : self._get_host_dimension(),
+              "Instance Name" : self._get_hostname(),
               "InstanceId" : self._get_host_dimension(),
               "PluginInstance" : self._get_plugin_instance_dimension()
               }
@@ -148,3 +148,7 @@ class MetricDataBuilder(object):
         if self.config.asg_name:
             return self.config.asg_name
         return "NONE"
+
+    def _get_hostname(self):
+        if self.config.hostname:
+            return self.config.hostname

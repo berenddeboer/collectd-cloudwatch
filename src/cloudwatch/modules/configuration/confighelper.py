@@ -40,6 +40,7 @@ class ConfigHelper(object):
         self.endpoint = ''
         self.ec2_endpoint = ''
         self.host = ''
+        self.hostname = ''
         self.asg_name = 'NONE'
         self.proxy_server_name = ''
         self.proxy_server_port = ''
@@ -130,12 +131,12 @@ class ConfigHelper(object):
         Load host from the configuration file, if configuration file does not contain host entry
         then try to retrieve Instance ID from local metadata service.
         """
+        self.hostname = socket.gethostname()
         if self.config_reader.host:
             self.host = self.config_reader.host
         else:
             try:
-                self.host = socket.gethostname()
-                #self.host = self.metadata_reader.get_instance_id()
+                self.host = self.metadata_reader.get_instance_id()
             except Exception as e:
                 ConfigHelper._LOGGER.warning("Cannot retrieve Instance ID from the local metadata server. Cause: " + str(e) +
                     " Using host information provided by Collectd.")
